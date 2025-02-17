@@ -14698,7 +14698,7 @@ build_lrouter_out_snat_flow(struct lflow_table *lflows,
      * properly tracked so we can decide whether to perform SNAT on traffic
      * exiting the network. */
     if (features->ct_commit_to_zone && features->ct_next_zone &&
-        nat_entry->type == SNAT && !od->is_gw_router && !commit_all) {
+        !strcmp(nat->type, "snat") && !od->is_gw_router && !commit_all) {
         /* For traffic that comes from SNAT network, initiate CT state before
          * entering S_ROUTER_OUT_SNAT to allow matching on various CT states.
          */
