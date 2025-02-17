@@ -15152,6 +15152,9 @@ build_lrouter_nat_defrag_and_lb(
     const struct chassis_features *features,
     struct lflow_ref *lflow_ref)
 {
+    const char *ct_flag_reg = features->ct_no_masked_label
+                              ? "ct_mark"
+                              : "ct_label";
     bool commit_all = smap_get_bool(&od->nbr->options, "ct-commit-all", false);
     /* Ingress DNAT (Priority 50/70).
      *
