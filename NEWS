@@ -3,6 +3,45 @@ OVN v24.03.6 - xx xxx xxxx
    - Improved handling of IPv6 traffic by enabling address prefix tracking
      in OVS for both IPv4 and IPv6 addresses, whenever possible, reducing
      the amount of IPv6 datapath flows.
+   - Add concept of Transit Routers, users are now allowed to specify
+     options:requested-chassis for router ports; if the chassis is remote
+     then the router port will behave as a remote port.
+   - Added a new ACL option "persist-established" that allows for
+     established connections to bypass ACL matching. This way, if an ACL
+     match changes, traffic on the established connection can still pass.
+   - Logical router policies can now be arranged in chains. Using the new
+     "jump" action, combined with new "chain" and "jump_chain" columns,
+     allows for policies to be chained together.
+   - Reduce the max number of local datapath to 1024 when OVN is using VXLAN
+     encapsulation type in OVN-interconnect mode.
+   - Added vxlan_mode parameter in IC_NB_GLOBAL option column to enable or
+     disable VXLAN encapsulation type in OVN-interconnect mode.
+   - Dynamic Routing:
+     * Add the option "dynamic-routing" to Logical Routers. If set to true
+       static and connected routes matching the filter below are shared to the
+       southbound "Advertised_Route" table for sharing outside of OVN.
+       The routes can further be configured by setting
+       `dynamic-routing-redistribute` on the LR or LRP. The LRP settings
+       overwrite the LR settings for all routes using this interface to
+       forward traffic on.
+     * Allow Logical Routers to dynamically learn routes from outside the
+       fabric. Routes entered into the "Learned_Route" table in the southbound
+       database will be learned by the respective LR. They are included in the
+       route table with a lower priority than static routes.
+     * Add the option value "connected-as-host" to the
+       "dynamic-routing-redistribute" LR and LRP option. If set then connected
+       routes are announced as individual host routes.
+     * Add the option "dynamic-routing-maintain-vrf" to LRPs. If set the
+       ovn-controller will create a vrf named "ovnvrf" + datapath id that
+       includes all advertised and learned routes.
+       The vrf name can be overwritten with the "dynamic-routing-vrf-name"
+       setting.
+     * Add the option "dynamic-routing-port-name" to LRPs. If set only routes
+       learned from a linux interfaces that is locally bound to the referenced
+       LSP will be learned. Additionally support local overwrites for arbitrary
+       interface names using "dynamic-routing-port-mapping".
+   - Add "options:ct-commit-all" to LR, that enables commit of all traffic
+     to DNAT and SNAT zone when LR is stateful.
 
 OVN v24.03.5 - 21 Jan 2025
 --------------------------
