@@ -96,10 +96,7 @@ EXTRA_DIST = \
 	.ci/ovn-kubernetes/Dockerfile \
 	.ci/ovn-kubernetes/prepare.sh \
 	.ci/ovn-kubernetes/custom.patch \
-	.github/workflows/containers.yml \
-	.github/workflows/test.yml \
-	.github/workflows/ovn-kubernetes.yml \
-	.github/workflows/ovn-fake-multinode-tests.yml \
+	.github/workflows/build_debs.yml \
 	.readthedocs.yaml \
 	boot.sh \
 	$(MAN_FRAGMENTS) \
