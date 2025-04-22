@@ -1,0 +1,72 @@
+name: Build and upload debian packages
+
+on:
+  push:
+    tags: ['*']
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create release ${{ github.ref }} as a draft
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ github.ref }}" --draft --generate-notes
+
+  build-linux-deb:
+    needs: [create-release]
+    name: linux debian ubuntu
+    runs-on: ${{ matrix.distro }}
+    timeout-minutes: 30
+
+    strategy:
+      matrix:
+        include:
+          - distro: ubuntu-24.04
+          - distro: ubuntu-24.04-arm
+      fail-fast: true
+
+    steps:
+      - name: install dependencies
+        run: |
+          sudo apt update && \
+          sudo apt install -y graphviz autoconf automake debhelper \
+            libssl-dev libtool python3-all python3-sphinx python3-twisted \
+            libunbound-dev libunwind-dev dh-python dh-autoreconf
+
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: configure and build OvS
+        run: |
+          ./boot.sh && \
+          ./configure --prefix=/usr --localstatedir=/var --sysconfdir=/etc && \
+          make -j CFLAGS='-fPIC'
+        working-directory: ovs
+
+      - name: build and upload OVN debs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          DEB_BUILD_OPTIONS='parallel=8 nocheck' fakeroot debian/rules binary
+          find ../ -name '*.deb'  -exec gh release upload "${{ github.ref }}" "{}" \;
+
+  publish-release:
+    name: Publish Release
+    needs: [build-linux-deb]
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Publish release ${{ github.ref }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ "$(gh release view "${{ github.ref }}" --json assets --template '{{len .assets}}')" -lt 0 ]; then
+            exit 1
+          fi
+          gh release edit "${{ github.ref }}" --draft=false
